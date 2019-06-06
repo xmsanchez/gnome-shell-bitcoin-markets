@@ -29,6 +29,7 @@ const FIRST_RUN_KEY = "first-run";
 
 const DEBUG_HANDLERS = true;
 
+// This constant holds the possible symbols that we are going to show next to the pair
 const _Symbols = {
   error: "\u26A0",
   refresh: "\u27f3",
@@ -43,8 +44,10 @@ const _Colors = {
 
 const settings = Convenience.getSettings();
 
+// This is the main layout where all indicators will be placed
 let _marketIndicatorView;
 
+// We will instantiate this object for each currency pair to hold its values
 const indicatorViewObj = new Lang.Class({
   Name: "indicatorViewObj",
 
@@ -66,6 +69,7 @@ const indicatorViewObj = new Lang.Class({
     return "unchanged";
   },
 
+  // Show refresh symbol
   onUpdateStart() {
     this._displayStatus(_Symbols.refresh);
   },
@@ -82,10 +86,12 @@ const indicatorViewObj = new Lang.Class({
     this._updatePopupItemLabel();
   },
 
+  // When data is updated we'll display the new values and symbols
   onUpdatePriceData(priceData) {
     var length = Object.keys(priceData).length - 1
-    const [p, p1] = priceData;
 
+    // Check if current value has changed from prior value
+    const [p, p1] = priceData;
     const change = p1
       ? this.getChange(p.value, p1.value)
       : "unchanged";
@@ -97,19 +103,27 @@ const indicatorViewObj = new Lang.Class({
     };
 
     let symbol = " ";
+    // Show the symbol only if option is enabled for this pair
     if(this.options.show_change){
       symbol = _StatusToSymbol[change];
     }
+
+    // Display the new values
     this._displayStatus(symbol);
     this._displayText(Format.format(p.value, this.options));
   },
 
+  // This will set the symbol (up / down / unchanged)
   _displayStatus(text) {
     this.popupItemValue.label.text = text
   },
 
+  // This will display the new currency value
   _displayText(text) {
+    // Label = currency pair (i.e BTCUSD) + new value + change symbol
     this.popupItemValue.label.text = this.pair + " " + text + " " + this.popupItemValue.label.text
+
+    // We show in the top bar the values of the first currency pair from the settings
     var options = _marketIndicatorView.options[0]
     var first_pair = options.base + options.quote
     if(this.pair == first_pair){
@@ -132,6 +146,7 @@ const indicatorViewObj = new Lang.Class({
 
 });
 
+// This class will hold all the indicators as well as the settings button
 const MarketIndicatorView = new Lang.Class({
   Name: "MarketIndicatorView",
   Extends: PanelMenu.Button,
@@ -155,6 +170,7 @@ const MarketIndicatorView = new Lang.Class({
     }
   },
 
+  // Add the main layout where all the indicators will be placed
   _addMainLayout () {
     const layout = new St.BoxLayout();
     
@@ -177,8 +193,8 @@ const MarketIndicatorView = new Lang.Class({
     return layout
   },
 
+  // This will add the settings button add the end of the main layout
   _addSettingsLayout (){
-    // Afegeix la opció "Settings"
     this._popupItemSettings = new PopupMenu.PopupMenuItem(_("Settings"));
     this.menu.addMenuItem(this._popupItemSettings);
     this._popupItemSettings.connect("activate", () => {
@@ -194,10 +210,9 @@ const MarketIndicatorView = new Lang.Class({
     });
   },
 
-  _addWidgetTitle(index, itemValue) {
-    // TODO -  El primer element estarà al títol del widget
+  // The title will be shown only on load
+  _addWidgetTitle(index) {
     if(index == 0){
-      //this._indicatorView.text = currency_pair + ": value"
       this._indicatorView.text = "Crypto market"
     }
   },
@@ -206,35 +221,37 @@ const MarketIndicatorView = new Lang.Class({
     var popupItemValue = new Array(options_arr.length);
     var arr = new Array(options_arr.length)
 
-    // Afegim el layout principal amb el títol
+    // We add the main layout
     const layout = this._addMainLayout();
 
-    // Anem a buscar el llistat de currencies a consultar
+    // Retrieve the currencies to check from the settings
     options_arr.forEach((options, i) => {
       try {
-        // Afegeix la opció "Settings"
+        // setOptions will add the currency pair api address to "this" (options.api)
         var currency_pair = options.base + options.quote
         this.setOptions(options);
-        popupItemValue = new PopupMenu.PopupMenuItem(_("Waiting for refresh"));
+
+        // This is the indicator where the value for the currency pair will be shown
+        popupItemValue = new PopupMenu.PopupMenuItem(_(" "));
         popupItemValue.label.clutter_text.set_line_wrap(true);
         this.menu.addMenuItem(popupItemValue);
 
-        this._addWidgetTitle(i, popupItemValue);
+        this._addWidgetTitle(i);
 
       } catch (e) {
         logError(e);
       }
 
-      // We create a new object with all necessary data to be updated
+      // Instantiate a new indicatorViewObj with all necessary data for this pair
       var obj = new indicatorViewObj(popupItemValue, options);
       arr.push(obj);
     });
 
-    // Afegeix un separador (invisible) i el layout de les Settings
+    // Add an invisibile separator to show before the settings button
     this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
     this._addSettingsLayout();
 
-    // Subscribe the objects from the array to the ApiService that will do the updating
+    // All the indicatorViewObj objects get subscribed to ApiService which handles the updating
     ApiService.setSubscribers(arr);
   }
 });
@@ -243,23 +260,41 @@ function init(metadata) {
   Convenience.initTranslations();
 }
 
-function enable() {
-  const arrOptions = settings.get_strv(INDICATORS_KEY)
-    .map(str => {
-      try {
-        return JSON.parse(str);
-      } catch (e) {
-        e.message = `Error parsing string ${str}: ${e.message}`;
-        logError(e);
-      }
-    })
-    .filter(Boolean);
+function getSettings() {
+  var new_settings = settings.get_strv(INDICATORS_KEY)
+  .map(str => {
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      e.message = `Error parsing string ${str}: ${e.message}`;
+      logError(e);
+    }
+  })
+  .filter(Boolean);
+  return new_settings
+}
+
+// Create the main object, this might be called again if settings are changed
+function startMarketIndicatorView() {
+  log("Let's retrieve settings and create indicators")
+  const arrOptions = getSettings();
   try {
     _marketIndicatorView = new MarketIndicatorView(arrOptions);    
     Main.panel.addToStatusArea(`bitcoin-market-indicator`, _marketIndicatorView);
   } catch (e) {
     logError(e);
   }
+}
+
+function enable() {
+  // Create the new indicator container and its children
+  startMarketIndicatorView();
+  // We are going to monitor changes in settings to apply them as needed
+  settings_changed = settings.connect('changed', function(){
+    log("Detected changes in Settings, apply them")
+    _marketIndicatorView.destroy();
+    startMarketIndicatorView();
+  });
 }
 
 function disable() {

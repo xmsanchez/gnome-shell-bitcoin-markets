@@ -8,7 +8,7 @@ const StringFormat = Local.imports.vendor.stringformat;
 const defaultDigits = 2;
 
 
-const format = (value, { base, quote, format }) => {
+var format = (value, { base, quote, format }) => {
   const getSymbol = (code) =>
     (code in CurrencyData)
       ? CurrencyData[code].symbol_native
@@ -53,7 +53,7 @@ const format = (value, { base, quote, format }) => {
 }
 
 
-const tooltipText = () => {
+var tooltipText = () => {
   const pad = (s, w) =>
     s + Array(w - s.length).fill(" ").join("");
 

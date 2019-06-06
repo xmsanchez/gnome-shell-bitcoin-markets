@@ -30,7 +30,7 @@ const {
 
 
 
-const Providers = {
+var Providers = {
   binance: new ProviderBinance.Api(),
   bitcoinaverage: new ProviderBitcoinAverage.Api(),
   bitfinex: new ProviderBitfinex.Api(),

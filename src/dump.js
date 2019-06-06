@@ -1,6 +1,6 @@
 // vi: sts=2 sw=2 et
 //
-const dump = (v, opts = {values: true}) => {
+var dump = (v, opts = {values: true}) => {
   const segments = [];
   const indentStr = (i) => Array(i * 2 + 1).join(" ");
   const makeSegments = (v, objects=[], indent=1) => {

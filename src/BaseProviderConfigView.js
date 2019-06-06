@@ -12,7 +12,7 @@ const Local = imports.misc.extensionUtils.getCurrentExtension();
 const { ApiService } = Local.imports;
 
 
-const makeConfigRow = (description, widget) => {
+var makeConfigRow = (description, widget) => {
   const box = new Gtk.Box({
     orientation: Gtk.Orientation.HORIZONTAL,
     margin_bottom: 8,
@@ -46,7 +46,7 @@ const debounce = (milliseconds, func) => {
 };
 
 
-const ComboBoxView = new Lang.Class({
+var ComboBoxView = new Lang.Class({
   Name: "ComboBoxView",
 
   Columns: { LABEL: 0, VALUE: 1 },
@@ -93,7 +93,7 @@ const ComboBoxView = new Lang.Class({
 Signals.addSignalMethods(ComboBoxView.prototype);
 
 
-const BaseProviderConfigView = new Lang.Class({
+var BaseProviderConfigView = new Lang.Class({
   Name: "BaseProviderConfigView",
 
   _init(api, configWidget, indicatorConfig) {
