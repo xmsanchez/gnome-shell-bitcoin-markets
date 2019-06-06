@@ -1,3 +1,17 @@
+## NOTICE
+
+This project was created as a fork from the original project to rewrite how the indicator is displayed. 
+
+- All the currencies are now shown in just one indicator (keeps top bar cleaner).
+- First indicator in the settings will be the one displayed by default. To change it just reorder currencies in settings.
+- The symbols are now shown at the right of the currency value instead of the left.
+
+I'm new to gnome extension and pretty noob in development in general so expect possible bugs. To be fixed:
+
+- Settings don't place effect immediately, you need to reload gnome (ALT + F2 -> Run: r ).
+
+## Original README
+
 ![Screenshot](https://github.com/OttoAllmendinger/gnome-shell-bitcoin-markets/blob/master/data/screenshot.png?raw=true)
 
 Displays Bitcoin and Altcoin market information in the Gnome Shell.

@@ -16,7 +16,6 @@ const {
   ProviderBitPay,
   ProviderBitso,
   ProviderBitstamp,
-  ProviderBlinktrade,
   ProviderBTCMarkets,
   ProviderBXinTH,
   ProviderCexio,
@@ -29,6 +28,8 @@ const {
   ProviderPoloniex,
 } = Local.imports;
 
+
+
 const Providers = {
   binance: new ProviderBinance.Api(),
   bitcoinaverage: new ProviderBitcoinAverage.Api(),
@@ -37,7 +38,6 @@ const Providers = {
   bitpay: new ProviderBitPay.Api(),
   bitso: new ProviderBitso.Api(),
   bitstamp: new ProviderBitstamp.Api(),
-  blinktrade: new ProviderBlinktrade.Api(),
   btcmarkets: new ProviderBTCMarkets.Api(),
   bxinth: new ProviderBXinTH.Api(),
   cexio: new ProviderCexio.Api(),
@@ -50,7 +50,7 @@ const Providers = {
   poloniex: new ProviderPoloniex.Api(),
 };
 
-const getProvider = (name) => {
+var getProvider = (name) => {
   if (name in Providers) {
     return Providers[name];
   } else {
@@ -259,7 +259,7 @@ const _pollLoops = new Map(
 );
 
 
-const setSubscribers = (subscribers) => {
+var setSubscribers = (subscribers) => {
   subscribers = subscribers.filter(({ options }) => {
     if (options.api in Providers) {
       return true;

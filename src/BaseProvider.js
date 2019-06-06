@@ -11,7 +11,7 @@ const HTTP = Local.imports.HTTP;
 /**
  * Api definitions
  */
-const Api = new Lang.Class({
+var Api = new Lang.Class({
   Name: "BaseApi",
 
   _init() {

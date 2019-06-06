@@ -14,7 +14,7 @@ const { ApiService } = Local.imports;
 
 const INDICATORS_KEY = "indicators";
 
-const Defaults = {
+var Defaults = {
   api: "bitcoinaverage",
   base: "BTC",
   quote: "USD",

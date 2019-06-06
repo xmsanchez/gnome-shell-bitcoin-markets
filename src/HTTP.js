@@ -75,7 +75,7 @@ Soup.Session.prototype.add_feature.call(
 
 const cache = new Map();
 
-const getJSON = (url, params) => {
+var getJSON = (url, params) => {
   const message = Soup.Message.new("GET", url);
   const headers = message.request_headers;
   headers.append("X-Client-Id", _clientId);

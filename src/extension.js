@@ -1,10 +1,4 @@
 /*jshint moz:true */
-// vi: sw=2 sts=2 et
-
-// const Gdk = imports.gi.Gdk;
-// const Gio = imports.gi.Gio;
-// const GLib = imports.gi.GLib;
-// const GnomeDesktop = imports.gi.GnomeDesktop;
 const Lang = imports.lang;
 const Shell = imports.gi.Shell;
 const St = imports.gi.St;
@@ -49,71 +43,15 @@ const _Colors = {
 
 const settings = Convenience.getSettings();
 
-const MarketIndicatorView = new Lang.Class({
-  Name: "MarketIndicatorView",
-  Extends: PanelMenu.Button,
+let _marketIndicatorView;
 
-  _init(options) {
-    this.parent(0);
-    this.providerLabel = "";
-    this._initLayout();
-    this.setOptions(options);
-  },
+const indicatorViewObj = new Lang.Class({
+  Name: "indicatorViewObj",
 
-  setOptions(options) {
-    try {
-      this.providerLabel =
-        ApiService.getProvider(options.api).getLabel(options);
-    } catch (e) {
-      logError(e);
-      this.providerLabel = `[${options.api}]`;
-      this.onUpdateError(e);
-      return;
-    }
-
+  _init(popupItemValue, options) {
+    this.popupItemValue = popupItemValue;
     this.options = options;
-  },
-
-  _initLayout() {
-    const layout = new St.BoxLayout();
-
-    this._indicatorView = new St.Label({
-      y_align: Clutter.ActorAlign.CENTER,
-      style_class: "indicator"
-    });
-
-    this._statusView = new St.Label({
-      y_align: Clutter.ActorAlign.CENTER,
-      style_class: "status"
-    });
-
-    layout.add_actor(this._statusView);
-    layout.add_actor(this._indicatorView);
-
-    this.actor.add_actor(layout);
-
-    this._popupItemStatus = new PopupMenu.PopupMenuItem(
-      "", {activate: false, hover: false, can_focus: false}
-    );
-    this._popupItemStatus.label.set_style("max-width: 12em;");
-    this._popupItemStatus.label.clutter_text.set_line_wrap(true);
-    this.menu.addMenuItem(this._popupItemStatus);
-
-    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-
-    this._popupItemSettings = new PopupMenu.PopupMenuItem(_("Settings"));
-    this.menu.addMenuItem(this._popupItemSettings);
-    this._popupItemSettings.connect("activate", () => {
-      const app_sys = Shell.AppSystem.get_default();
-      const prefs = app_sys.lookup_app("gnome-shell-extension-prefs.desktop");
-      if (prefs.get_state() == prefs.SHELL_APP_STATE_RUNNING) {
-        prefs.activate();
-      } else {
-        prefs
-          .get_app_info()
-          .launch_uris(["extension:///" + Local.metadata.uuid], null);
-      }
-    });
+    this.pair = this.options.base + this.options.quote
   },
 
   getChange(lastValue, newValue) {
@@ -145,6 +83,7 @@ const MarketIndicatorView = new Lang.Class({
   },
 
   onUpdatePriceData(priceData) {
+    var length = Object.keys(priceData).length - 1
     const [p, p1] = priceData;
 
     const change = p1
@@ -154,27 +93,28 @@ const MarketIndicatorView = new Lang.Class({
     const _StatusToSymbol = {
       up: _Symbols.up,
       down: _Symbols.down,
-      unchanged: " "
+      unchanged: ""
     };
 
     let symbol = " ";
-    if (this.options.show_change) {
+    if(this.options.show_change){
       symbol = _StatusToSymbol[change];
-      this._displayStatus(symbol);
-    } else {
-      this._statusView.width = 0;
     }
-
+    this._displayStatus(symbol);
     this._displayText(Format.format(p.value, this.options));
-    this._updatePopupItemLabel();
   },
 
   _displayStatus(text) {
-    this._statusView.text = text;
+    this.popupItemValue.label.text = text
   },
 
   _displayText(text) {
-    this._indicatorView.text = text;
+    this.popupItemValue.label.text = this.pair + " " + text + " " + this.popupItemValue.label.text
+    var options = _marketIndicatorView.options[0]
+    var first_pair = options.base + options.quote
+    if(this.pair == first_pair){
+      _marketIndicatorView._indicatorView.text = this.popupItemValue.label.text
+    }
   },
 
   _updatePopupItemLabel(err) {
@@ -182,137 +122,146 @@ const MarketIndicatorView = new Lang.Class({
     if (err) {
       text += "\n\n" + String(err);
     }
-    this._popupItemStatus.label.text = text;
+    this.popupItemValue.label.text = text;
   },
 
   destroy() {
-    this._indicatorView.destroy();
-    this._statusView.destroy();
+    this.popupItemValue.destroy();
     this.parent();
   }
+
 });
 
-const IndicatorCollection = new Lang.Class({
-  Name: "IndicatorCollection",
+const MarketIndicatorView = new Lang.Class({
+  Name: "MarketIndicatorView",
+  Extends: PanelMenu.Button,
 
-  _init() {
-    this._indicators = [];
+  _init(options) {
+    this.parent(0);
+    this.options = options
+    this.providerLabel = "";
+    this._initLayout(options);
+  },
 
-    if (settings.get_boolean(FIRST_RUN_KEY)) {
-      this._initDefaults();
-      settings.set_boolean(FIRST_RUN_KEY, false);
-    } else {
-      this._upgradeSettings();
+  setOptions(options) {
+    try {
+      this.providerLabel =
+        ApiService.getProvider(options.api).getLabel(options);
+    } catch (e) {
+      logError(e);
+      this.providerLabel = `[${options.api}]`;
+      this.onUpdateError(e);
+      return;
     }
+  },
 
-    const tryUpdateIndicators = () => {
+  _addMainLayout () {
+    const layout = new St.BoxLayout();
+    
+    this._indicatorView = new St.Label({
+      y_align: Clutter.ActorAlign.CENTER,
+      style_class: "indicator",
+      text: "Crypto market"
+    });
+
+    this._statusView = new St.Label({
+      y_align: Clutter.ActorAlign.CENTER,
+      style_class: "status"
+    });
+
+    layout.add_actor(this._statusView);
+    layout.add_actor(this._indicatorView);
+
+    this.actor.add_actor(layout);
+
+    return layout
+  },
+
+  _addSettingsLayout (){
+    // Afegeix la opció "Settings"
+    this._popupItemSettings = new PopupMenu.PopupMenuItem(_("Settings"));
+    this.menu.addMenuItem(this._popupItemSettings);
+    this._popupItemSettings.connect("activate", () => {
+      const app_sys = Shell.AppSystem.get_default();
+      const prefs = app_sys.lookup_app("gnome-shell-extension-prefs.desktop");
+      if (prefs.get_state() == prefs.SHELL_APP_STATE_RUNNING) {
+        prefs.activate();
+      } else {
+        prefs
+          .get_app_info()
+          .launch_uris(["extension:///" + Local.metadata.uuid], null);
+      }
+    });
+  },
+
+  _addWidgetTitle(index, itemValue) {
+    // TODO -  El primer element estarà al títol del widget
+    if(index == 0){
+      //this._indicatorView.text = currency_pair + ": value"
+      this._indicatorView.text = "Crypto market"
+    }
+  },
+
+  _initLayout(options_arr) {
+    var popupItemValue = new Array(options_arr.length);
+    var arr = new Array(options_arr.length)
+
+    // Afegim el layout principal amb el títol
+    const layout = this._addMainLayout();
+
+    // Anem a buscar el llistat de currencies a consultar
+    options_arr.forEach((options, i) => {
       try {
-        this._updateIndicators();
+        // Afegeix la opció "Settings"
+        var currency_pair = options.base + options.quote
+        this.setOptions(options);
+        popupItemValue = new PopupMenu.PopupMenuItem(_("Waiting for refresh"));
+        popupItemValue.label.clutter_text.set_line_wrap(true);
+        this.menu.addMenuItem(popupItemValue);
+
+        this._addWidgetTitle(i, popupItemValue);
+
       } catch (e) {
         logError(e);
       }
-    }
 
-    this._settingsChangedId = settings.connect(
-      "changed::" + INDICATORS_KEY,
-      tryUpdateIndicators
-    );
+      // We create a new object with all necessary data to be updated
+      var obj = new indicatorViewObj(popupItemValue, options);
+      arr.push(obj);
+    });
 
-    tryUpdateIndicators();
-  },
+    // Afegeix un separador (invisible) i el layout de les Settings
+    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+    this._addSettingsLayout();
 
-  _initDefaults() {
-    settings.set_strv(INDICATORS_KEY, [Defaults].map(JSON.stringify));
-  },
-
-  _upgradeSettings() {
-    const applyDefaults = (options) => {
-      if (options.base === undefined) {
-        options.base = options.coin || "BTC";
-      }
-
-      if (options.quote === undefined) {
-        options.quote = options.currency || "USD";
-      }
-
-      if (options.format === undefined) {
-        if (options.show_base_currency) {
-          options.format = "{b}/{q} {v}";
-        } else {
-          options.format = "{v} {qs}";
-        }
-      }
-      delete options.show_base_currency;
-      delete options.coin;
-      delete options.currency;
-      return options;
-    };
-    const updated = settings.get_strv(INDICATORS_KEY)
-      .map(JSON.parse)
-      .map(applyDefaults);
-    settings.set_strv(INDICATORS_KEY, updated.map(JSON.stringify));
-  },
-
-  _updateIndicators() {
-    const arrOptions = settings.get_strv(INDICATORS_KEY)
-      .map(str => {
-        try {
-          return JSON.parse(str);
-        } catch (e) {
-          e.message = `Error parsing string ${str}: ${e.message}`;
-          logError(e);
-        }
-      })
-      .filter(Boolean);
-
-    if (arrOptions.length === this._indicators.length) {
-      arrOptions.forEach((options, i) => {
-        try {
-          this._indicators[i].setOptions(options);
-        } catch (e) {
-          logError(e);
-        }
-      });
-    } else {
-      this._removeAll();
-      const indicators = arrOptions.map((options) => {
-        return new MarketIndicatorView(options);
-      });
-      indicators.forEach((view, i) => {
-        Main.panel.addToStatusArea(`bitcoin-market-indicator-${i}`, view);
-      });
-      this._indicators = indicators;
-    }
-
-    ApiService.setSubscribers(this._indicators);
-  },
-
-  _removeAll() {
-    this._indicators.forEach((i) => i.destroy());
-    this._indicators = [];
-  },
-
-  destroy() {
-    this._removeAll();
-    ApiService.setSubscribers([]);
-    settings.disconnect(this._settingsChangedId);
+    // Subscribe the objects from the array to the ApiService that will do the updating
+    ApiService.setSubscribers(arr);
   }
 });
-
-let _indicatorCollection;
 
 function init(metadata) {
   Convenience.initTranslations();
 }
 
 function enable() {
+  const arrOptions = settings.get_strv(INDICATORS_KEY)
+    .map(str => {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        e.message = `Error parsing string ${str}: ${e.message}`;
+        logError(e);
+      }
+    })
+    .filter(Boolean);
   try {
-    _indicatorCollection = new IndicatorCollection();
+    _marketIndicatorView = new MarketIndicatorView(arrOptions);    
+    Main.panel.addToStatusArea(`bitcoin-market-indicator`, _marketIndicatorView);
   } catch (e) {
     logError(e);
   }
 }
 
 function disable() {
-  _indicatorCollection.destroy();
+  _marketIndicatorView.destroy();
 }

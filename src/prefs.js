@@ -159,7 +159,6 @@ const IndicatorConfigView = new Lang.Class({
     return makeConfigRow(_("Show Change"), switchView);
   },
 
-
   _confShowBaseCurrency() {
     const preset = this._indicatorConfig.get("show_base_currency") === true;
 
