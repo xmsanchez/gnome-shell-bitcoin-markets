@@ -19,7 +19,7 @@ var Api = new Lang.Class({
   //   minutes.  This counter refills continuously. If you are not logged in,
   //   your ratelimit is 150/5minutes.
   // ```
-  interval: 10,
+  interval: 40,
 
   getUrl({ base, quote }) {
     const symbol = `${base}${quote}`.toUpperCase();
