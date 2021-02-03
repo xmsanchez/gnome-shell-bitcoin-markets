@@ -136,7 +136,7 @@ var CurrencyData = {
     "BTC": {
       "symbol": "BTC",
       "symbol_native": "BTC",
-      "decimal_digits": 2,
+      "decimal_digits": 8,
       "rounding": 0,
       "code": "BTC"
     },

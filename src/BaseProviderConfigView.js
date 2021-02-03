@@ -110,6 +110,7 @@ var BaseProviderConfigView = new Lang.Class({
   _initWidgets() {
     this._addBaseEntry();
     this._addQuoteEntry();
+    this._addDecimalsEntry();
     this._addHelp();
   },
 
@@ -142,6 +143,10 @@ var BaseProviderConfigView = new Lang.Class({
     return this._addSymbolEntry(_("Quote"), "quote", "USD");
   },
 
+  // _addDecimalsEntry() {
+  //   return this._addSymbolEntry(_("Decimals"), "decimals", "2");
+  // },
+
   _addSymbolEntry(label, key, defaultValue) {
     const entry = new Gtk.Entry({
       text: this._indicatorConfig.get(key) || defaultValue
@@ -171,17 +176,6 @@ var BaseProviderConfigView = new Lang.Class({
     this._addRow(_("Help"), new Gtk.Label({
       label: helpText, use_markup: true,
     }));
-    /*
-    apiDocs.forEach(([label, url]) => {
-      this._addConfigWidget(
-        new Gtk.Label({
-          label: `<a href="${url}">${label}</a>`,
-          use_markup: true,
-          margin_bottom: 8
-        })
-      );
-    });
-    */
   },
 
   destroy() {
