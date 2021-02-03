@@ -1,4 +1,9 @@
 tmp/
 *.zip
 *.swp
-.idea
+res/metadata.json
+node_modules/
+.idea/
+*.iml
+@types/
+build/

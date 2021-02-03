@@ -1,10 +1,15 @@
 {
+<<<<<<< HEAD:src/metadata.json
     "shell-version": ["3.24", "3.26", "3.28", "3.30", "3.32"],
     "uuid": "bitcoin-markets@xmfreak.github.com",
+=======
+    "shell-version": ["3.32", "3.34", "3.36", "3.38"],
+    "uuid": "bitcoin-markets@ottoallmendinger.github.com",
+>>>>>>> 09a2255131f0056cc7426dc2dc9bb5149c205fd6:src/metadata.json.in
     "name": "Bitcoin Markets",
     "url": "https://github.com/xmfreak/gnome-shell-bitcoin-markets/",
     "description": "Display info on various crypto-currency exchanges.",
     "settings-schema":  "org.gnome.shell.extensions.bitcoin-markets",
-    "gettext-domain": "bitcoin-markets",
+    "gettext-domain": "gnome-shell-bitcoin-markets",
     "git-version": "_gitversion_"
 }
