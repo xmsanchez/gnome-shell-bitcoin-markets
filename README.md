@@ -8,6 +8,16 @@ This project was created as a fork from the original project to rewrite how the 
 
 I'm new to gnome extension and pretty noob in development in general so expect possible bugs.
 
+## Using Coinmarketcap
+
+If you intend to use Coinmarketcap as a source to fetch data, you'll need to provide an API key. At the moment it is read from this file:
+
+```
+~/.coinmarketcap_apikey
+```
+
+If the file does not exist, you'll get a 401 unauthorized error when fetching from this origin.
+
 ## Original README
 
 ![Screenshot](https://github.com/OttoAllmendinger/gnome-shell-bitcoin-markets/blob/master/data/screenshot.png?raw=true)

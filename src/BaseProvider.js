@@ -71,4 +71,3 @@ var Api = new Lang.Class({
     throw new Error(`unknown attribute ${ticker.attribute}`);
   }
 });
-
